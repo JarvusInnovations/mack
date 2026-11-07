@@ -10,7 +10,7 @@ import {
   SectionBlock,
   TableBlock,
 } from '@slack/types';
-import {ListOptions, ParsingOptions} from '../types';
+import {ParsingOptions} from '../types';
 import {section, divider, header, image, table} from '../slack';
 import {marked} from 'marked';
 import {XMLParser} from 'fast-xml-parser';
@@ -234,9 +234,7 @@ function parseRichTextElements(
   }
 }
 
-function parseListItemRichText(
-  item: marked.Tokens.ListItem
-): RichTextSection {
+function parseListItemRichText(item: marked.Tokens.ListItem): RichTextSection {
   const paragraph = item.tokens[0] as marked.Tokens.Text;
   let elements: RichTextElement[] = [];
 
@@ -253,7 +251,7 @@ function parseListItemRichText(
 
 function flattenListToRuns(
   element: marked.Tokens.List,
-  depth: number = 0
+  depth = 0
 ): {style: 'bullet' | 'ordered'; indent: number; section: RichTextSection}[] {
   const runs: {
     style: 'bullet' | 'ordered';
@@ -269,9 +267,7 @@ function flattenListToRuns(
     for (let i = 1; i < item.tokens.length; i++) {
       const token = item.tokens[i];
       if (token.type === 'list') {
-        runs.push(
-          ...flattenListToRuns(token as marked.Tokens.List, depth + 1)
-        );
+        runs.push(...flattenListToRuns(token as marked.Tokens.List, depth + 1));
       }
     }
   }
@@ -304,9 +300,10 @@ function parseList(element: marked.Tokens.List): RichTextBlock {
   return {type: 'rich_text', elements: listElements};
 }
 
-function parseTableCell(
-  cell: marked.Tokens.TableCell
-): {type: 'raw_text'; text: string} {
+function parseTableCell(cell: marked.Tokens.TableCell): {
+  type: 'raw_text';
+  text: string;
+} {
   const texts = cell.tokens.reduce((accumulator, child) => {
     parsePhrasingContentToStrings(child as PhrasingToken, accumulator);
     return accumulator;
@@ -330,9 +327,7 @@ function parseTable(element: marked.Tokens.Table): TableBlock {
     align: (a && alignMap[a]) || 'left',
   }));
 
-  const rows = [element.header, ...element.rows].map(row =>
-    parseTableRow(row)
-  );
+  const rows = [element.header, ...element.rows].map(row => parseTableRow(row));
 
   return table(rows, columnSettings);
 }
