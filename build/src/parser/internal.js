@@ -153,8 +153,8 @@ function parseRichTextElements(element, inheritedStyle = {}) {
             return [];
     }
 }
-function parseListItemRichText(item) {
-    var _a;
+function parseListItemRichText(item, options = {}) {
+    var _a, _b, _c;
     const paragraph = item.tokens[0];
     let elements = [];
     if (paragraph && paragraph.type === 'text' && ((_a = paragraph.tokens) === null || _a === void 0 ? void 0 : _a.length)) {
@@ -163,26 +163,37 @@ function parseListItemRichText(item) {
     else if (paragraph) {
         elements = [{ type: 'text', text: paragraph.text || '' }];
     }
+    // A task item (`- [x]` / `- [ ]`) keeps its state: Slack's list block has no checkbox, so
+    // the state becomes a text prefix, configurable through lists.checkboxPrefix as upstream.
+    if (item.task) {
+        const checked = item.checked === true;
+        const prefix = (_c = (_b = options.checkboxPrefix) === null || _b === void 0 ? void 0 : _b.call(options, checked)) !== null && _c !== void 0 ? _c : (checked ? '☑ ' : '☐ ');
+        elements = [{ type: 'text', text: prefix }, ...elements];
+    }
     return { type: 'rich_text_section', elements };
 }
-function flattenListToRuns(element, depth = 0) {
+function flattenListToRuns(element, depth = 0, options = {}) {
     const runs = [];
     const style = element.ordered ? 'ordered' : 'bullet';
     for (const item of element.items) {
-        runs.push({ style, indent: depth, section: parseListItemRichText(item) });
+        runs.push({
+            style,
+            indent: depth,
+            section: parseListItemRichText(item, options),
+        });
         // Process nested lists within this item
         for (let i = 1; i < item.tokens.length; i++) {
             const token = item.tokens[i];
             if (token.type === 'list') {
-                runs.push(...flattenListToRuns(token, depth + 1));
+                runs.push(...flattenListToRuns(token, depth + 1, options));
             }
         }
     }
     return runs;
 }
-function parseList(element) {
+function parseList(element, options = {}) {
     var _a;
-    const runs = flattenListToRuns(element);
+    const runs = flattenListToRuns(element, 0, options);
     // Group consecutive runs with the same style and indent into rich_text_list elements
     const listElements = [];
     for (const run of runs) {
@@ -265,7 +276,7 @@ function parseToken(token, options) {
         case 'blockquote':
             return parseBlockquote(token);
         case 'list':
-            return [parseList(token)];
+            return [parseList(token, options.lists)];
         case 'table':
             return [parseTable(token)];
         case 'hr':

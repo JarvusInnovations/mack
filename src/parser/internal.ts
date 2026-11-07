@@ -235,7 +235,8 @@ function parseRichTextElements(
 }
 
 function parseListItemRichText(
-  item: marked.Tokens.ListItem
+  item: marked.Tokens.ListItem,
+  options: ListOptions = {}
 ): RichTextSection {
   const paragraph = item.tokens[0] as marked.Tokens.Text;
   let elements: RichTextElement[] = [];
@@ -248,12 +249,21 @@ function parseListItemRichText(
     elements = [{type: 'text', text: paragraph.text || ''}];
   }
 
+  // A task item (`- [x]` / `- [ ]`) keeps its state: Slack's list block has no checkbox, so
+  // the state becomes a text prefix, configurable through lists.checkboxPrefix as upstream.
+  if (item.task) {
+    const checked = item.checked === true;
+    const prefix = options.checkboxPrefix?.(checked) ?? (checked ? '☑ ' : '☐ ');
+    elements = [{type: 'text', text: prefix}, ...elements];
+  }
+
   return {type: 'rich_text_section', elements};
 }
 
 function flattenListToRuns(
   element: marked.Tokens.List,
-  depth: number = 0
+  depth = 0,
+  options: ListOptions = {}
 ): {style: 'bullet' | 'ordered'; indent: number; section: RichTextSection}[] {
   const runs: {
     style: 'bullet' | 'ordered';
@@ -263,14 +273,18 @@ function flattenListToRuns(
   const style = element.ordered ? 'ordered' : 'bullet';
 
   for (const item of element.items) {
-    runs.push({style, indent: depth, section: parseListItemRichText(item)});
+    runs.push({
+      style,
+      indent: depth,
+      section: parseListItemRichText(item, options),
+    });
 
     // Process nested lists within this item
     for (let i = 1; i < item.tokens.length; i++) {
       const token = item.tokens[i];
       if (token.type === 'list') {
         runs.push(
-          ...flattenListToRuns(token as marked.Tokens.List, depth + 1)
+          ...flattenListToRuns(token as marked.Tokens.List, depth + 1, options)
         );
       }
     }
@@ -279,8 +293,11 @@ function flattenListToRuns(
   return runs;
 }
 
-function parseList(element: marked.Tokens.List): RichTextBlock {
-  const runs = flattenListToRuns(element);
+function parseList(
+  element: marked.Tokens.List,
+  options: ListOptions = {}
+): RichTextBlock {
+  const runs = flattenListToRuns(element, 0, options);
 
   // Group consecutive runs with the same style and indent into rich_text_list elements
   const listElements: RichTextList[] = [];
@@ -304,9 +321,10 @@ function parseList(element: marked.Tokens.List): RichTextBlock {
   return {type: 'rich_text', elements: listElements};
 }
 
-function parseTableCell(
-  cell: marked.Tokens.TableCell
-): {type: 'raw_text'; text: string} {
+function parseTableCell(cell: marked.Tokens.TableCell): {
+  type: 'raw_text';
+  text: string;
+} {
   const texts = cell.tokens.reduce((accumulator, child) => {
     parsePhrasingContentToStrings(child as PhrasingToken, accumulator);
     return accumulator;
@@ -330,9 +348,7 @@ function parseTable(element: marked.Tokens.Table): TableBlock {
     align: (a && alignMap[a]) || 'left',
   }));
 
-  const rows = [element.header, ...element.rows].map(row =>
-    parseTableRow(row)
-  );
+  const rows = [element.header, ...element.rows].map(row => parseTableRow(row));
 
   return table(rows, columnSettings);
 }
@@ -391,7 +407,7 @@ function parseToken(
       return parseBlockquote(token);
 
     case 'list':
-      return [parseList(token)];
+      return [parseList(token, options.lists)];
 
     case 'table':
       return [parseTable(token)];

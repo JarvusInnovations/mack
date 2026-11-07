@@ -100,11 +100,17 @@ a **b** _c_ **_d_ e**
                         elements: [
                             {
                                 type: 'rich_text_section',
-                                elements: [{ type: 'text', text: 'checkbox false' }],
+                                elements: [
+                                    { type: 'text', text: '☐ ' },
+                                    { type: 'text', text: 'checkbox false' },
+                                ],
                             },
                             {
                                 type: 'rich_text_section',
-                                elements: [{ type: 'text', text: 'checkbox true' }],
+                                elements: [
+                                    { type: 'text', text: '☑ ' },
+                                    { type: 'text', text: 'checkbox true' },
+                                ],
                             },
                         ],
                     },

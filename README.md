@@ -2,7 +2,24 @@
 
 > Convert Markdown and GitHub Flavoured Markdown to Slack BlockKit Blocks
 
-[![Node.js CI](https://github.com/rr-codes/mack/actions/workflows/ci.yml/badge.svg)](https://github.com/rr-codes/mack/actions/workflows/ci.yml)
+## About this fork
+
+`@jarvus/mack` is a fork of [tryfabric/mack](https://github.com/tryfabric/mack) maintained by [Jarvus Innovations](https://github.com/JarvusInnovations). It was forked at upstream commit [`5dc0226`](https://github.com/tryfabric/mack/commit/5dc0226); upstream has been unmaintained since 2023 (last release `@tryfabric/mack@1.2.1`, June 2022).
+
+```
+npm install @jarvus/mack
+```
+
+What the fork adds over upstream 1.2.1:
+
+- Markdown tables render as native Slack `table` blocks, with column alignment preserved ([`437cce3`](https://github.com/JarvusInnovations/mack/commit/437cce3))
+- Markdown lists render as native Slack `rich_text` blocks ([`49c6620`](https://github.com/JarvusInnovations/mack/commit/49c6620))
+- HTML entities are decoded correctly, including inside code blocks ([`dfd7b1a`](https://github.com/JarvusInnovations/mack/commit/dfd7b1a), [`9439113`](https://github.com/JarvusInnovations/mack/commit/9439113), [`c8205e7`](https://github.com/JarvusInnovations/mack/commit/c8205e7), [`d0a9d6c`](https://github.com/JarvusInnovations/mack/commit/d0a9d6c))
+- Committed build output so the package can be installed straight from git ([`ccc4991`](https://github.com/JarvusInnovations/mack/commit/ccc4991))
+
+See [CHANGELOG.md](CHANGELOG.md) for release history.
+
+[![Node.js CI](https://github.com/JarvusInnovations/mack/actions/workflows/ci.yml/badge.svg)](https://github.com/JarvusInnovations/mack/actions/workflows/ci.yml)
 [![Code Style: Google](https://img.shields.io/badge/code%20style-google-blueviolet.svg)](https://github.com/google/gts)
 
 Mack is a Markdown parser to convert any Markdown content to Slack BlockKit block objects.
@@ -12,13 +29,13 @@ Text is truncated to fit within the Slack API's limits.
 ### Supported Markdown Elements
 
 - All inline elements (italics, bold, strikethrough, inline code, hyperlinks)
-- Lists (ordered, unordered, checkboxes)
+- Lists (ordered, unordered, nested), as native `rich_text` blocks. Task-list items keep their state as a `☑ ` / `☐ ` prefix
 - All headers
 - Code blocks
 - Block quotes (with some limitations)
 - Images
 - Thematic Breaks / Dividers
-- Tables (alignment not preserved)
+- Tables, as native Slack `table` blocks (column alignment preserved; Slack allows one table per message)
 
 ### Not Yet Supported Markdown Elements
 
@@ -27,15 +44,15 @@ Text is truncated to fit within the Slack API's limits.
 ## Installation
 
 ```
-npm install @tryfabric/mack
+npm install @jarvus/mack
 ```
 
 ## Usage
 
 ```ts
-import {markdownToBlocks} from '@tryfabric/mack';
+import {markdownToBlocks} from '@jarvus/mack';
 
-const blocks = markdownToBlocks(`
+const blocks = await markdownToBlocks(`
 # Hello world
 
 * bulleted item 1
@@ -51,7 +68,7 @@ The `blocks` object now results in [this](https://app.slack.com/block-kit-builde
 
 ## API
 
-`function markdownToBlocks(text: string, options: ParsingOptions): KnownBlock[]`
+`async function markdownToBlocks(text: string, options?: ParsingOptions): Promise<KnownBlock[]>`
 
 - `text`: the content to parse
 - `options`: the options to use when parsing.
@@ -65,7 +82,9 @@ interface ParsingOptions {
 }
 
 interface ListOptions {
-  // Configure how checkbox list items are displayed. By default, they are prefixed with '* '
+  // Configure how task-list items show their state. Default: '☑ ' when checked, '☐ ' when not
   checkboxPrefix?: (checked: boolean) => string;
 }
 ```
+
+Task-list items render with their state as a text prefix (`☑ ` / `☐ `) inside the native list; `lists.checkboxPrefix` overrides the prefix.
