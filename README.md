@@ -29,7 +29,7 @@ Text is truncated to fit within the Slack API's limits.
 ### Supported Markdown Elements
 
 - All inline elements (italics, bold, strikethrough, inline code, hyperlinks)
-- Lists (ordered, unordered, nested), as native `rich_text` blocks. Task-list checkboxes render as plain bullets; the checked state is not shown
+- Lists (ordered, unordered, nested), as native `rich_text` blocks. Task-list items keep their state as a `☑ ` / `☐ ` prefix
 - All headers
 - Code blocks
 - Block quotes (with some limitations)
@@ -82,7 +82,7 @@ interface ParsingOptions {
 }
 
 interface ListOptions {
-  // Configure how checkbox list items are displayed. By default, they are prefixed with '* '
+  // Configure how task-list items show their state. Default: '☑ ' when checked, '☐ ' when not
   checkboxPrefix?: (checked: boolean) => string;
 }
 ```
