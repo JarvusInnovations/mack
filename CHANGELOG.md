@@ -11,7 +11,7 @@ First release of the maintained fork, published as `@jarvus/mack`. Forked from [
 
 ### Changed
 
-- Because lists are now `rich_text` blocks, the `lists.checkboxPrefix` option is ignored and task-list items render as plain bullets without their checked state
+- Task-list items (`- [x]` / `- [ ]`) render inside the native list with their state as a text prefix, `☑ ` / `☐ ` by default; `lists.checkboxPrefix` still overrides it, so upstream callers keep working.
 
 ### Fixes
 

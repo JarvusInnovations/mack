@@ -87,4 +87,4 @@ interface ListOptions {
 }
 ```
 
-> **Note:** since lists became native `rich_text` blocks in 1.3.0, `lists.checkboxPrefix` is accepted but ignored.
+Task-list items render with their state as a text prefix (`☑ ` / `☐ `) inside the native list; `lists.checkboxPrefix` overrides the prefix.
