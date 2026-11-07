@@ -31,9 +31,7 @@
     "compile": "tsc",
     "fix": "gts fix",
     "pretest": "npm run compile",
-    "posttest": "npm run lint",
-    "release": "release-it",
-    "prepublishOnly": "npm run compile && npm test"
+    "posttest": "npm run lint"
   },
   "keywords": [
     "markdown",
