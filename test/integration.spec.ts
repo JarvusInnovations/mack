@@ -283,3 +283,16 @@ if (a === 'hi') {
     });
   });
 });
+
+describe('email addresses', () => {
+  it('keeps a bare address readable in a list item and in a paragraph', async () => {
+    const blocks = await markdownToBlocks(
+      '1. Sign in as general@example.com.\n\nMail <ops@example.com> too.'
+    );
+    const json = JSON.stringify(blocks);
+    expect(json).not.toMatch(/&#/);
+    expect(json).toContain('"url":"mailto:general@example.com"');
+    expect(json).toContain('"text":"general@example.com"');
+    expect(json).toContain('<mailto:ops@example.com|ops@example.com>');
+  });
+});
