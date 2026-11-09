@@ -33,7 +33,9 @@ export async function markdownToBlocks(
     '>': '&gt;',
   };
 
-  const lexer = new marked.Lexer();
+  // mangle off: marked scrambles autolinked email addresses into random HTML entities,
+  // which Slack shows literally
+  const lexer = new marked.Lexer({...marked.defaults, mangle: false});
   const tokenizer = (lexer as unknown as {tokenizer: marked.Tokenizer})
     .tokenizer;
   const inlineTextRule = (
